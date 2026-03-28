@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Adventure - Pro Teacher Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: #f0f9ff;
+            overflow-x: hidden;
+        }
+        .heading-font { font-family: 'Fredoka One', cursive; }
+        .card-pop { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card-pop:hover { transform: scale(1.05); }
+        .active-mic { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .confetti {
+            position: absolute; width: 10px; height: 10px;
+            animation: fall 3s linear forwards;
+        }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .teacher-note { border-left: 4px solid #6366f1; background: #eef2ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="min-h-screen p-2 md:p-6">
+
+    <div id="app" class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border-8 border-indigo-400">
+        
+        <!-- Top Bar with Progress -->
+        <header class="bg-indigo-500 p-4 text-white flex justify-between items-center">
+            <div>
+                <h1 class="heading-font text-2xl">🎨 Color Adventure Pro</h1>
+                <p class="text-xs opacity-80">1-on-1 Interactive Lesson (60 Mins)</p>
+            </div>
+            <div class="flex gap-2" id="stars-container">
+                <span class="text-2xl">⭐</span><span class="text-2xl opacity-30">⭐</span><span class="text-2xl opacity-30">⭐</span><span class="text-2xl opacity-30">⭐</span><span class="text-2xl opacity-30">⭐</span>
+            </div>
+        </header>
+
+        <!-- Dynamic Navigation -->
+        <nav class="flex bg-indigo-50 overflow-x-auto no-scrollbar border-b">
+            <button onclick="switchTab('warmup')" id="tab-warmup" class="flex-none px-6 py-4 font-bold border-b-4 border-indigo-500 text-indigo-600">1. Warm-up</button>
+            <button onclick="switchTab('vocabulary')" id="tab-vocabulary" class="flex-none px-6 py-4 font-bold text-gray-500">2. Vocabulary+</button>
+            <button onclick="switchTab('library')" id="tab-library" class="flex-none px-6 py-4 font-bold text-gray-500">3. Speaking Lab</button>
+            <button onclick="switchTab('scavenger')" id="tab-scavenger" class="flex-none px-6 py-4 font-bold text-gray-500">4. Scavenger Hunt</button>
+            <button onclick="switchTab('toolbox')" id="tab-toolbox" class="flex-none px-6 py-4 font-bold text-pink-600 bg-pink-50">🛠 Teacher's Toolbox</button>
+        </nav>
+
+        <main class="p-4 md:p-8 min-h-[600px]">
+            
+            <!-- 1. WARM-UP -->
+            <section id="section-warmup" class="block space-y-6">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-indigo-700 mb-2">How are you today?</h2>
+                    <p class="text-gray-600 italic">Teacher: Ask "How do you feel?" and click a mood.</p>
+                </div>
+                <div class="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div onclick="moodPick('Happy', 'Yellow')" class="cursor-pointer p-6 bg-yellow-100 rounded-2xl text-center card-pop border-2 border-yellow-300 shadow-sm">
+                        <span class="text-5xl block mb-2">😊</span><p class="font-bold">Happy</p>
+                    </div>
+                    <div onclick="moodPick('Energetic', 'Orange')" class="cursor-pointer p-6 bg-orange-100 rounded-2xl text-center card-pop border-2 border-orange-300 shadow-sm">
+                        <span class="text-5xl block mb-2">🚀</span><p class="font-bold">Energetic</p>
+                    </div>
+                    <div onclick="moodPick('Calm', 'Blue')" class="cursor-pointer p-6 bg-blue-100 rounded-2xl text-center card-pop border-2 border-blue-300 shadow-sm">
+                        <span class="text-5xl block mb-2">🌊</span><p class="font-bold">Calm</p>
+                    </div>
+                </div>
+                <div id="mood-feedback" class="text-center h-12 text-xl font-bold text-indigo-500 transition-all"></div>
+            </section>
+
+            <!-- 2. VOCABULARY PLUS -->
+            <section id="section-vocabulary" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-emerald-600">Words & Objects</h2>
+                    <span class="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold">Listen & Repeat</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="vocab-grid"></div>
+            </section>
+
+            <!-- 3. SPEAKING LAB -->
+            <section id="section-library" class="hidden space-y-6">
+                <div class="bg-pink-50 rounded-3xl p-6 border-4 border-pink-200 shadow-inner">
+                    <h2 class="heading-font text-2xl text-pink-600 text-center mb-4">Sentence Builder Lab</h2>
+                    <div class="flex flex-wrap justify-center gap-2 text-xl font-bold mb-8">
+                        <span class="p-3 bg-white rounded-xl shadow border border-pink-100">The</span>
+                        <select id="obj-select" class="p-3 bg-white rounded-xl shadow border-2 border-pink-400 outline-none focus:ring-2 ring-pink-300 transition-all">
+                            <option value="apple">apple</option>
+                            <option value="sky">sky</option>
+                            <option value="grass">grass</option>
+                            <option value="sun">sun</option>
+                            <option value="cloud">cloud</option>
+                        </select>
+                        <span class="p-3 bg-white rounded-xl shadow border border-pink-100">is</span>
+                        <select id="color-select" onchange="updateDisplayColor()" class="p-3 bg-white rounded-xl shadow border-2 border-pink-400 outline-none font-bold text-red-500">
+                            <!-- Injected by JS -->
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                        <button id="mic-btn" onclick="startSpeakingTask()" class="bg-pink-500 hover:bg-pink-600 text-white p-10 rounded-full shadow-2xl mb-4 transition-all hover:scale-105 active:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-20a3 3 0 013 3v5a3 3 0 01-6 0V5a3 3 0 013-3z" />
+                            </svg>
+                        </button>
+                        <p id="mic-status" class="text-pink-700 font-bold uppercase tracking-wider text-sm">Ready to listen!</p>
+                        <div id="speak-feedback" class="mt-4 text-xl font-bold h-8 text-center"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. SCAVENGER HUNT -->
+            <section id="section-scavenger" class="hidden text-center space-y-6">
+                <div class="bg-orange-50 p-8 rounded-3xl border-4 border-orange-200">
+                    <h2 class="heading-font text-3xl text-orange-600 mb-2">Go Find It! 🏃‍♂️</h2>
+                    <p class="text-gray-600 mb-6">Find an object in your room.</p>
+                    <p class="text-4xl mb-8 font-bold">Bring something <span id="hunt-color" class="underline decoration-4">BLUE</span>!</p>
+                    
+                    <div class="flex justify-center gap-6 mb-8">
+                        <div class="animate-bounce text-7xl drop-shadow-lg">🧸</div>
+                        <div class="animate-bounce text-7xl drop-shadow-lg" style="animation-delay: 0.2s">👟</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-2xl shadow-inner border border-orange-100 mb-6">
+                        <p class="text-sm font-bold text-orange-400 uppercase">Sentence practice:</p>
+                        <p class="text-xl font-bold italic">"Teacher! Look! I have a <span class="text-orange-600" id="hunt-suggest">[Color]</span> [Object]!"</p>
+                    </div>
+
+                    <button onclick="nextHunt()" class="bg-orange-500 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:bg-orange-600 transition-all text-xl">Next Color! ➡</button>
+                </div>
+            </section>
+
+            <!-- 5. TEACHER'S TOOLBOX (NEW) -->
+            <section id="section-toolbox" class="hidden space-y-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Practice Questions -->
+                    <div class="bg-white p-6 rounded-2xl shadow-md border border-pink-200">
+                        <h3 class="heading-font text-pink-600 text-xl mb-4 flex items-center gap-2">
+                            <span>❓</span> Practice Questions
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="teacher-note">
+                                <p class="text-xs font-bold text-indigo-500">LEVEL: BASIC</p>
+                                <ul class="list-disc ml-4 text-sm font-semibold">
+                                    <li>"What color is this?"</li>
+                                    <li>"Is this red or green?"</li>
+                                    <li>"Do you like yellow?"</li>
+                                </ul>
+                            </div>
+                            <div class="teacher-note">
+                                <p class="text-xs font-bold text-indigo-500">LEVEL: INTERMEDIATE</p>
+                                <ul class="list-disc ml-4 text-sm font-semibold">
+                                    <li>"What is your favorite color?"</li>
+                                    <li>"Can you see something blue?"</li>
+                                    <li>"What color is your shirt?"</li>
+                                </ul>
+                            </div>
+                            <div class="teacher-note">
+                                <p class="text-xs font-bold text-indigo-500">LEVEL: ADVANCED</p>
+                                <ul class="list-disc ml-4 text-sm font-semibold">
+                                    <li>"Why do you like pink?"</li>
+                                    <li>"Tell me 3 things that are orange."</li>
+                                    <li>"If you mix red and white, what color do you get?"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Guide -->
+                    <div class="bg-white p-6 rounded-2xl shadow-md border border-indigo-200">
+                        <h3 class="heading-font text-indigo-600 text-xl mb-4 flex items-center gap-2">
+                            <span>📜</span> 60-Min Lesson Plan
+                        </h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex gap-3 items-start border-b pb-2">
+                                <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded">0-10'</span>
+                                <p><strong>Warm-up:</strong> Greet the student. Talk about mood colors. Check connection.</p>
+                            </div>
+                            <div class="flex gap-3 items-start border-b pb-2">
+                                <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded">10-25'</span>
+                                <p><strong>Vocabulary:</strong> Intro colors + objects. Play "Repeat after me" with different speeds.</p>
+                            </div>
+                            <div class="flex gap-3 items-start border-b pb-2">
+                                <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded">25-45'</span>
+                                <p><strong>Sentence Lab:</strong> Build full sentences. Focus on "The... is...". Use the Mic feature.</p>
+                            </div>
+                            <div class="flex gap-3 items-start border-b pb-2">
+                                <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded">45-55'</span>
+                                <p><strong>Movement:</strong> Scavenger Hunt! Get the student to find real objects.</p>
+                            </div>
+                            <div class="flex gap-3 items-start">
+                                <span class="bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded">55-60'</span>
+                                <p><strong>Review:</strong> Award stars. Final goodbye. Assignment: Find 2 new colors at home.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-yellow-50 rounded-xl border-2 border-dashed border-yellow-300">
+                            <p class="font-bold text-yellow-700 text-xs uppercase mb-2">Teaching Tip:</p>
+                            <p class="text-xs text-yellow-800">Always encourage full sentences. If they say "Blue", prompt with "It is...?" to get "It is blue!"</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="bg-gray-100 p-4 border-t flex justify-between items-center text-xs font-bold text-gray-500">
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span>TEACHER CONNECTED</span>
+            </div>
+            <span>COLOR ADVENTURE v2.5 • SPEAKING FOCUS</span>
+        </footer>
+    </div>
+
+    <!-- Celebration Overlay -->
+    <div id="celebration" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+    <script>
+        const colors = [
+            { name: 'Red', hex: '#ef4444', obj: 'Apple' },
+            { name: 'Blue', hex: '#3b82f6', obj: 'Sky' },
+            { name: 'Green', hex: '#22c55e', obj: 'Grass' },
+            { name: 'Yellow', hex: '#eab308', obj: 'Sun' },
+            { name: 'Pink', hex: '#ec4899', obj: 'Candy' },
+            { name: 'Orange', hex: '#f97316', obj: 'Orange' },
+            { name: 'Purple', hex: '#a855f7', obj: 'Grape' },
+            { name: 'White', hex: '#cbd5e1', obj: 'Cloud' }
+        ];
+
+        let stars = 1;
+
+        window.onload = () => {
+            renderVocab();
+            renderColorSelect();
+        };
+
+        function renderVocab() {
+            const grid = document.getElementById('vocab-grid');
+            grid.innerHTML = colors.map(c => `
+                <div class="card-pop bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center cursor-pointer hover:shadow-md" 
+                     onclick="speakAndShow('${c.name}', '${c.obj}')">
+                    <div class="w-full h-24 rounded-xl mb-3 shadow-inner border border-gray-50" style="background-color: ${c.hex}"></div>
+                    <span class="font-bold text-indigo-700 text-lg">${c.name}</span>
+                    <span class="text-xs text-gray-400 font-bold uppercase tracking-tighter">Like an ${c.obj}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderColorSelect() {
+            const sel = document.getElementById('color-select');
+            sel.innerHTML = colors.map(c => `<option value="${c.name.toLowerCase()}">${c.name}</option>`).join('');
+            updateDisplayColor();
+        }
+
+        function updateDisplayColor() {
+            const sel = document.getElementById('color-select');
+            const colName = sel.value;
+            const colorData = colors.find(c => c.name.toLowerCase() === colName);
+            sel.style.color = colorData.hex;
+        }
+
+        function switchTab(tab) {
+            const sections = ['warmup', 'vocabulary', 'library', 'scavenger', 'toolbox'];
+            sections.forEach(s => {
+                document.getElementById(`section-${s}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${s}`);
+                btn.classList.remove('border-b-4', 'border-indigo-500', 'text-indigo-600', 'bg-pink-50');
+                btn.classList.add('text-gray-500');
+            });
+            
+            const activeSec = tab === 'speaking' ? 'library' : tab;
+            document.getElementById(`section-${activeSec}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('border-b-4', 'border-indigo-500', 'text-indigo-600');
+            
+            if(tab === 'toolbox') document.getElementById(`tab-${tab}`).classList.add('bg-pink-50');
+            if(tab === 'scavenger') nextHunt();
+        }
+
+        function speakText(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakAndShow(text, obj) {
+            speakText(`${text}. The ${obj} is ${text}.`);
+        }
+
+        function moodPick(mood, color) {
+            const feedback = document.getElementById('mood-feedback');
+            feedback.innerText = `Awesome! Feeling ${mood} today! 🌈`;
+            speakText(`I am glad you feel ${mood}. Let's have fun!`);
+            addStar();
+        }
+
+        function addStar() {
+            if(stars < 5) {
+                stars++;
+                const container = document.getElementById('stars-container');
+                container.innerHTML = '⭐'.repeat(stars) + '<span class="opacity-30">⭐</span>'.repeat(5-stars);
+            }
+        }
+
+        function startSpeakingTask() {
+            const obj = document.getElementById('obj-select').value;
+            const col = document.getElementById('color-select').value;
+            const btn = document.getElementById('mic-btn');
+            const status = document.getElementById('mic-status');
+            const feedback = document.getElementById('speak-feedback');
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert("Speech recognition not supported in your browser.");
+            
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = () => {
+                btn.classList.add('active-mic');
+                status.innerText = "Listening...";
+                feedback.innerHTML = "";
+            };
+
+            recognition.onresult = (event) => {
+                const said = event.results[0][0].transcript.toLowerCase();
+                btn.classList.remove('active-mic');
+                
+                if(said.includes(obj) && said.includes(col)) {
+                    feedback.innerHTML = "🌟 EXCELLENT! Perfect sentence! +10 pts";
+                    feedback.className = "mt-4 text-xl font-bold text-green-500 h-8";
+                    celebrate();
+                    addStar();
+                } else {
+                    feedback.innerHTML = `You said: "${said}"... Let's try once more!`;
+                    feedback.className = "mt-4 text-xl font-bold text-orange-400 h-8";
+                }
+            };
+
+            recognition.onerror = () => {
+                btn.classList.remove('active-mic');
+                status.innerText = "Error! Try again.";
+            };
+
+            recognition.onend = () => {
+                btn.classList.remove('active-mic');
+                status.innerText = "Tap to speak";
+            };
+
+            recognition.start();
+        }
+
+        function nextHunt() {
+            const huntColor = colors[Math.floor(Math.random() * colors.length)];
+            const el = document.getElementById('hunt-color');
+            const sug = document.getElementById('hunt-suggest');
+            
+            el.innerText = huntColor.name.toUpperCase();
+            el.style.color = huntColor.hex;
+            sug.innerText = huntColor.name;
+            sug.style.color = huntColor.hex;
+            
+            speakText(`Quick! Go find something ${huntColor.name}. Go! Go! Go!`);
+        }
+
+        function celebrate() {
+            const container = document.getElementById('celebration');
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = '-20px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)].hex;
+                conf.style.width = Math.random() * 12 + 6 + 'px';
+                conf.style.height = conf.style.width;
+                conf.style.borderRadius = i % 2 === 0 ? '50%' : '2px';
+                conf.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+                container.appendChild(conf);
+                setTimeout(() => conf.remove(), 3500);
+            }
+        }
+    </script>
+</body>
+</html>
