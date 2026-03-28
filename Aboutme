@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Lesson Plan: About Me</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Required Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar for sleekness */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f5f5f4; }
+        ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+
+        /* Interactive Card Styling */
+        .vocab-card {
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        .vocab-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dialogue-bubble-teacher {
+            border-left: 4px solid #0ea5e9;
+            background-color: #f0f9ff;
+        }
+        .dialogue-bubble-student {
+            border-left: 4px solid #10b981;
+            background-color: #ecfdf5;
+        }
+        
+        .step-btn.active {
+            background-color: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+    </style>
+</head>
+<!-- Chosen Palette: Warm Neutrals with Sky Blue and Emerald Accents -->
+<!-- Application Structure Plan: The SPA is designed as an interactive "Teacher's Dashboard" to make the lesson plan instantly navigable. It uses a top-down approach starting with high-level overviews (Target Language, Time Allocation Chart) and drills down into an interactive Timeline Explorer for the lesson steps. This structural choice prioritizes rapid information retrieval for a teacher—allowing them to quickly grasp the lesson's goal, see the time distribution, and then interactively focus on one specific stage of the lesson at a time without endless scrolling through a static document. -->
+<!-- Visualization & Content Choices: Time Allocation -> Goal: Inform/Organize -> Viz: Chart.js Doughnut Chart -> Interaction: Hover to see exact minutes -> Justification: Gives an immediate visual sense of lesson pacing and dominant activities (guided practice & game). Target Language -> Goal: Inform -> Viz: Interactive CSS cards with Unicode icons -> Interaction: Hover effects -> Justification: Makes vocabulary review engaging and distinct from standard text. Lesson Steps -> Goal: Organize/Explore -> Viz: Dynamic Content Switcher (JS) -> Interaction: Click timeline buttons to reveal specific step details -> Justification: Prevents information overload; allows the user to focus strictly on the current teaching phase. Confirming NO SVG/Mermaid used. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<body class="bg-stone-50 text-slate-800 font-sans antialiased selection:bg-sky-200 selection:text-sky-900 leading-relaxed">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header Section -->
+        <header class="mb-10 text-center md:text-left flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-2xl shadow-sm border border-stone-200">
+            <div>
+                <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">ESL Speaking Lesson: <span class="text-sky-600">About Me</span></h1>
+                <p class="text-lg text-slate-500 max-w-2xl">A highly interactive, Zoom-optimized speaking lesson designed to maximize student talk time through TPR, modeling, and guided communication.</p>
+            </div>
+            <div class="mt-6 md:mt-0 flex flex-wrap justify-center gap-3">
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-sky-100 text-sky-800 border border-sky-200 shadow-sm">
+                    <span class="mr-2 text-lg">🧒</span> Ages 8–11
+                </span>
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm">
+                    <span class="mr-2 text-lg">📈</span> Level A1–A2
+                </span>
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
+                    <span class="mr-2 text-lg">👥</span> 4-5 Students
+                </span>
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200 shadow-sm">
+                    <span class="mr-2 text-lg">⏱️</span> 60 Mins
+                </span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Overviews & Targets -->
+            <div class="lg:col-span-1 flex flex-col gap-8">
+                
+                <!-- Time Allocation Chart -->
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h2 class="text-xl font-bold text-slate-900 mb-2 border-b pb-2 border-stone-100">Lesson Pacing</h2>
+                    <p class="text-sm text-slate-500 mb-6">This chart illustrates the time distribution across the 60-minute session. Notice the heavy emphasis on student-led practice and communicative gaming.</p>
+                    <div class="chart-container">
+                        <canvas id="pacingChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Materials & Homework -->
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h2 class="text-xl font-bold text-slate-900 mb-2 border-b pb-2 border-stone-100">Requirements</h2>
+                    <p class="text-sm text-slate-500 mb-4">Essential tools and follow-up tasks for this interactive session.</p>
+                    
+                    <div class="mb-5">
+                        <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">Materials</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-start"><span class="text-sky-500 mr-2">💻</span> Zoom (Spotlight, Gallery, Breakouts, Whiteboard)</li>
+                            <li class="flex items-start"><span class="text-sky-500 mr-2">🖼️</span> Digital Flashcards (6 vocabulary words)</li>
+                            <li class="flex items-start"><span class="text-sky-500 mr-2">⚽</span> A physical ball or toy (for modeling)</li>
+                            <li class="flex items-start"><span class="text-sky-500 mr-2">⭐</span> Digital reward stars/stickers</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-wider mb-2">Optional Homework</h3>
+                        <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-lg text-sm text-emerald-900">
+                            <strong>"My Star Poster":</strong> Students draw themselves doing their favorite hobby. Next class, they present: <em>"Hello, my name is [Name]. I like [hobby]."</em>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Right Column: Interactive Content Explorer -->
+            <div class="lg:col-span-2 flex flex-col gap-8">
+
+                <!-- Target Language Section -->
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Target Language & Core Vocabulary</h2>
+                    <p class="text-sm text-slate-500 mb-6">The foundational building blocks of the lesson. Hover over the vocabulary cards below to interact. These terms will be integrated directly into the target sentence patterns.</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8" id="vocab-container">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-3 flex items-center"><span class="text-xl mr-2">💬</span> Sentence Patterns</h3>
+                        <ul class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <li class="bg-white px-4 py-2 rounded shadow-sm border border-slate-100 font-medium text-slate-700">My name is [Name].</li>
+                            <li class="bg-white px-4 py-2 rounded shadow-sm border border-slate-100 font-medium text-slate-700">I am [Age] years old.</li>
+                            <li class="bg-white px-4 py-2 rounded shadow-sm border border-slate-100 font-medium text-sky-700 border-l-4 border-l-sky-400">I like [verb+ing]. <br><span class="text-xs text-slate-500 font-normal">(e.g., I like reading books.)</span></li>
+                            <li class="bg-white px-4 py-2 rounded shadow-sm border border-slate-100 font-medium text-emerald-700 border-l-4 border-l-emerald-400">What do you like?</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Interactive Lesson Flow -->
+                <section class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 flex-grow">
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Interactive Lesson Flow</h2>
+                    <p class="text-sm text-slate-500 mb-6">Explore the detailed step-by-step methodology. Click through the timeline below to reveal specific teacher instructions, goals, and expected student dialogues for each phase of the 60-minute class.</p>
+                    
+                    <!-- Navigation/Timeline -->
+                    <div class="flex overflow-x-auto pb-4 mb-6 gap-2 snap-x" id="step-nav">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Dynamic Content Area -->
+                    <div id="step-content-area" class="min-h-[400px] transition-opacity duration-300">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Storage ---
+
+        const vocabularyData = [
+            { word: "Read books", icon: "📚", action: "Mime opening and reading" },
+            { word: "Play games", icon: "🎮", action: "Mime holding a controller" },
+            { word: "Draw pictures", icon: "🎨", action: "Mime painting/drawing" },
+            { word: "Ride a bike", icon: "🚲", action: "Mime pedaling and steering" },
+            { word: "Swim", icon: "🏊", action: "Mime swimming strokes" },
+            { word: "Sing songs", icon: "🎤", action: "Mime holding a microphone" }
+        ];
+
+        const lessonStepsData = [
+            {
+                id: 1,
+                title: "Warm-up",
+                time: "5 mins",
+                goal: "Break the ice, get everyone smiling, and review basic introductions.",
+                activity: "The 'Virtual High-Five & Name Chain'",
+                instructions: "Put Zoom in 'Gallery View' so everyone can see each other. Hold up your hands to the camera.",
+                dialogue: [
+                    { speaker: "Teacher", text: "Hello everyone! Welcome to class! Let's do a virtual high-five! (Teacher high-fives the camera). My name is Teacher [Name]. I am [Age/Happy]. High-five, Leo! What is your name? (Reach toward Leo's square on Zoom)" },
+                    { speaker: "Expected Student", text: "(High-fives camera) My name is Leo. I am 9 years old." },
+                    { speaker: "Teacher", text: "Great job, Leo! Now, high-five Emma and ask her name!" },
+                    { speaker: "Student (Leo)", text: "(High-fives) What is your name?" },
+                    { speaker: "Student (Emma)", text: "My name is Emma. I am 8. (Continue until all 4-5 students have spoken)." }
+                ]
+            },
+            {
+                id: 2,
+                title: "Vocabulary",
+                time: "10 mins",
+                goal: "Introduce new words using visuals and Total Physical Response (TPR).",
+                activity: "See it, Do it, Say it",
+                instructions: "Share your screen with colorful flashcards for each of the 6 vocabulary words. Teach one word at a time using an action.",
+                dialogue: [
+                    { speaker: "Teacher", text: "(Shows 'Read books' slide) Look! Read books. Everyone, show me your hands like a book! (Teacher mimes opening and reading a book) Say it with me: Read books." },
+                    { speaker: "Expected Students", text: "(Miming action) Read books!" },
+                    { speaker: "Teacher", text: "Excellent! Next... Swim! (Teacher mimes swimming) Swim!" },
+                    { speaker: "Expected Students", text: "(Miming swimming) Swim!" },
+                    { speaker: "Teacher", text: "(Stop screen share) Okay, speed round! I do the action, you say the word! (Teacher mimes riding a bike)" },
+                    { speaker: "Expected Students", text: "Ride a bike!" }
+                ]
+            },
+            {
+                id: 3,
+                title: "Model Speaking",
+                time: "10 mins",
+                goal: "Combine vocabulary into target sentence patterns with clear teacher modeling.",
+                activity: "The 'Magic Spotlight'",
+                instructions: "Use the Zoom 'Spotlight' feature on yourself so you are big on the screen.",
+                dialogue: [
+                    { speaker: "Teacher", text: "Listen and look. My name is Teacher [Name]. I am 30 years old. I like reading books. (Do the reading TPR action)" },
+                    { speaker: "Teacher", text: "Let's practice together. I like reading books." },
+                    { speaker: "Expected Students", text: "I like reading books." },
+                    { speaker: "Teacher", text: "(Change flashcard/action) I like playing games." },
+                    { speaker: "Expected Students", text: "I like playing games." },
+                    { speaker: "Teacher", text: "(Ask a student) Leo, I like drawing pictures. What do you like?" },
+                    { speaker: "Student (Leo)", text: "I like playing games." },
+                    { speaker: "Teacher", text: "Awesome! Full sentence: 'My name is Leo. I like playing games.' Try it!" }
+                ]
+            },
+            {
+                id: 4,
+                title: "Guided Practice",
+                time: "15 mins",
+                goal: "Controlled speaking practice where students interact with each other.",
+                activity: "Zoom Spotlight Pair Interviews",
+                instructions: "Since the class is small (4-5), keep everyone in the main room but use the 'Spotlight' feature to highlight two students at a time. This keeps the others engaged as the 'audience.'",
+                dialogue: [
+                    { speaker: "Teacher", text: "Time for a TV Interview! Emma and David, you are on TV! (Spotlight Emma and David)" },
+                    { speaker: "Teacher", text: "Emma, ask David: 'What do you like?'" },
+                    { speaker: "Student (Emma)", text: "What do you like?" },
+                    { speaker: "Student (David)", text: "I like swimming." },
+                    { speaker: "Teacher", text: "Great! David, now ask Emma." },
+                    { speaker: "Student (David)", text: "What do you like?" },
+                    { speaker: "Student (Emma)", text: "I like drawing pictures." },
+                    { speaker: "Teacher", text: "(Applaud) Fantastic! Let's spotlight two new friends. (Rotate until every student has asked and answered the question at least twice)." }
+                ]
+            },
+            {
+                id: 5,
+                title: "Comm. Game",
+                time: "15 mins",
+                goal: "Fun, unprompted speaking focusing on real communication.",
+                activity: "The 'Mute & Guess' Game (Charades)",
+                instructions: "This game uses Zoom's mute feature in a fun way.",
+                dialogue: [
+                    { speaker: "Teacher", text: "Let's play a game! Look at me. My microphone is OFF. (Mute your mic, mime 'riding a bike', unmute). What do I like?" },
+                    { speaker: "Expected Students", text: "You like riding a bike!" },
+                    { speaker: "Teacher", text: "Yes! Now it's your turn. Leo, it's a secret! Mute your microphone. Do an action. Emma, David, and Sarah, ask him: 'Do you like...?'" },
+                    { speaker: "Student (Leo)", text: "(Mutes mic, mimes singing a song)" },
+                    { speaker: "Student (Sarah)", text: "Do you like reading books?" },
+                    { speaker: "Student (Leo)", text: "(Shakes head no)" },
+                    { speaker: "Student (David)", text: "Do you like singing songs?" },
+                    { speaker: "Student (Leo)", text: "(Unmutes) Yes! I like singing songs! (Give every student 1-2 turns. Give virtual stars)." }
+                ]
+            },
+            {
+                id: 6,
+                title: "Wrap-up",
+                time: "5 mins",
+                goal: "Review, praise, and check for understanding.",
+                activity: "The Quick Review & Reflection",
+                instructions: "Bring up the Zoom Whiteboard with the 6 pictures.",
+                dialogue: [
+                    { speaker: "Teacher", text: "You all did an amazing job today! So many stars! Let's look at the pictures one last time. What is this? (Circle 'draw pictures')" },
+                    { speaker: "Expected Students", text: "Draw pictures!" },
+                    { speaker: "Teacher", text: "Yes! Now, I have two questions for you. Raise your hand if you can answer. 1. Who likes playing games in our class? 2. What is your favorite new word today?" },
+                    { speaker: "Expected Students", text: "David likes playing games! / My favorite word is swim!" },
+                    { speaker: "Teacher", text: "Wonderful! Thank you for a fun class. Don't forget to draw a picture for your homework. Goodbye everyone, wave goodbye!" },
+                    { speaker: "Expected Students", text: "Goodbye, Teacher!" }
+                ]
+            }
+        ];
+
+        // --- Core Application Logic ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            renderVocabulary();
+            initTimeline();
+        });
+
+        function initChart() {
+            const ctx = document.getElementById('pacingChart').getContext('2d');
+            const labels = lessonStepsData.map(step => step.title);
+            const data = lessonStepsData.map(step => parseInt(step.time));
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#fca5a5', // red-300
+                            '#fcd34d', // amber-300
+                            '#86efac', // green-300
+                            '#7dd3fc', // sky-300
+                            '#c4b5fd', // violet-300
+                            '#d6d3d1'  // stone-300
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { family: "'Inter', sans-serif", size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} minutes`;
+                                }
+                            },
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        function renderVocabulary() {
+            const container = document.getElementById('vocab-container');
+            vocabularyData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'vocab-card bg-stone-100 border border-stone-200 rounded-xl p-4 text-center cursor-help group relative overflow-hidden';
+                card.innerHTML = `
+                    <div class="text-4xl mb-2 transition-transform duration-300 group-hover:scale-110">${item.icon}</div>
+                    <div class="font-bold text-slate-800">${item.word}</div>
+                    <div class="absolute inset-0 bg-sky-600 text-white p-4 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span class="text-xs uppercase tracking-wider font-semibold opacity-80 mb-1">TPR Action</span>
+                        <span class="text-sm text-center leading-tight">${item.action}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function initTimeline() {
+            const navContainer = document.getElementById('step-nav');
+            
+            lessonStepsData.forEach((step, index) => {
+                const btn = document.createElement('button');
+                btn.className = `step-btn snap-center shrink-0 px-5 py-2 rounded-full border border-slate-300 text-slate-600 font-semibold text-sm transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 ${index === 0 ? 'active' : ''}`;
+                btn.innerText = `${index + 1}. ${step.title}`;
+                btn.onclick = () => renderStepContent(step.id, btn);
+                navContainer.appendChild(btn);
+            });
+
+            // Initial render
+            renderStepContent(1, navContainer.firstElementChild);
+        }
+
+        function renderStepContent(stepId, clickedBtn) {
+            // Update active state of buttons
+            document.querySelectorAll('.step-btn').forEach(btn => btn.classList.remove('active'));
+            if(clickedBtn) clickedBtn.classList.add('active');
+
+            const contentArea = document.getElementById('step-content-area');
+            const step = lessonStepsData.find(s => s.id === stepId);
+            
+            // Fade out, update, fade in effect
+            contentArea.style.opacity = '0';
+            
+            setTimeout(() => {
+                let dialogueHTML = '';
+                step.dialogue.forEach(line => {
+                    const isTeacher = line.speaker.includes('Teacher');
+                    const bubbleClass = isTeacher ? 'dialogue-bubble-teacher ml-0 mr-8' : 'dialogue-bubble-student ml-8 mr-0';
+                    const icon = isTeacher ? '🧑‍🏫' : '🧒';
+                    const speakerColor = isTeacher ? 'text-sky-700' : 'text-emerald-700';
+                    
+                    dialogueHTML += `
+                        <div class="mb-3 p-3 rounded-r-lg rounded-bl-lg shadow-sm ${bubbleClass}">
+                            <div class="text-xs font-bold uppercase tracking-wider mb-1 flex items-center ${speakerColor}">
+                                <span class="mr-1">${icon}</span> ${line.speaker}
+                            </div>
+                            <div class="text-slate-800 text-sm leading-relaxed">${line.text}</div>
+                        </div>
+                    `;
+                });
+
+                contentArea.innerHTML = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-inner">
+                        <div class="flex justify-between items-start mb-4 border-b border-slate-200 pb-4">
+                            <div>
+                                <span class="text-xs font-bold text-sky-600 tracking-wider uppercase">Phase ${step.id}</span>
+                                <h3 class="text-2xl font-bold text-slate-900 mt-1">${step.activity}</h3>
+                            </div>
+                            <span class="bg-slate-800 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center">
+                                ⏱️ ${step.time}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-6 grid gap-4 md:grid-cols-2">
+                            <div class="bg-amber-50 rounded-lg p-4 border border-amber-100">
+                                <div class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-2">🎯 Primary Goal</div>
+                                <p class="text-sm text-amber-900">${step.goal}</p>
+                            </div>
+                            <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                                <div class="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-2">📋 Teacher Setup</div>
+                                <p class="text-sm text-indigo-900">${step.instructions}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Expected Interaction Flow</div>
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 max-h-[300px] overflow-y-auto">
+                                ${dialogueHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                contentArea.style.opacity = '1';
+            }, 150);
+        }
+    </script>
+</body>
+</html>
